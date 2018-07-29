@@ -1,0 +1,19 @@
+{
+  "user": [
+    {
+      "id": "userId1",
+      "name": "userName1",
+      "description": "user1 description1"
+    },
+    {
+      "id": "userId2",
+      "name": "userName2",
+      "description": "user2 description2"
+    },
+    {
+      "id": "userId3",
+      "name": "userName3",
+      "description": "user3 description3"
+    }
+  ]
+}
