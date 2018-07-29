@@ -23,7 +23,7 @@ type alias User =
 
 
 type alias Model =
-    { screenName : String
+    { searchUserId : String
     , profile : Maybe User
     , users : List User
     , message : Maybe String
@@ -31,7 +31,7 @@ type alias Model =
 
 
 type Msg
-    = UpdateScreenName String
+    = UpdateSearchUserId String
     | FetchUser
     | LoadUser (Result Http.Error User)
     | FetchUsers
@@ -40,7 +40,7 @@ type Msg
 
 initialModel : Model
 initialModel =
-    Model "" Nothing [] Nothing
+    { searchUserId = "", profile = Nothing, users = [], message = Nothing }
 
 
 init : ( Model, Cmd Msg )
@@ -87,16 +87,16 @@ loadProfileView model =
         , h4 [] [ text "ユーザ検索" ]
         , input
             [ type_ "text"
-            , value model.screenName
-            , onInput UpdateScreenName
+            , value model.searchUserId
+            , onInput UpdateSearchUserId
             ]
             []
         , button
-            [ disabled (model.screenName == "")
+            [ disabled (model.searchUserId == "")
             , onClick FetchUser
             ]
             [ text "検索" ]
-        , p [] [ text model.screenName ]
+        , p [] [ text model.searchUserId ]
         , h4 [] [ text "ユーザ一覧" ]
         , ul [] (List.map profileView model.users)
         , profileDetailView model.profile
@@ -134,10 +134,10 @@ fetchUsers =
 
 
 fetchUser : String -> Cmd Msg
-fetchUser screenName =
+fetchUser searchUserId =
     let
         url =
-            "http://localhost:3000/user/" ++ screenName
+            "http://localhost:3000/user/" ++ searchUserId
 
         request =
             Http.get url userDecoder
@@ -148,11 +148,11 @@ fetchUser screenName =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        UpdateScreenName screenName ->
-            ( { model | screenName = screenName }, Cmd.none )
+        UpdateSearchUserId searchUserId ->
+            ( { model | searchUserId = searchUserId }, Cmd.none )
 
         FetchUser ->
-            ( model, fetchUser model.screenName )
+            ( model, fetchUser model.searchUserId )
 
         LoadUser result ->
             case result of
