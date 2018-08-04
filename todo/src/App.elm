@@ -25,18 +25,15 @@ type Status
     | Active
 
 
+type SearchStatus
+    = SearchStatus Status
+    | AllSearch
+
+
 type alias Todo =
     { todoId : TodoId
     , task : Task
     , status : Status
-    }
-
-
-type alias Model =
-    { inputTask : Task
-    , todos : List Todo
-    , todoIdSequence : Int
-    , searchWord : String
     }
 
 
@@ -46,11 +43,26 @@ type Msg
     | RemoveTodo TodoId
     | ChangeStatus TodoId Status
     | InputSearchWord SearchWord
+    | ChangeSearchStatus Status
+
+
+type alias Model =
+    { inputTask : Task
+    , todos : List Todo
+    , todoIdSequence : Int
+    , searchWord : String
+    , searchStatus : Status
+    }
 
 
 initialModel : Model
 initialModel =
-    { inputTask = "", todos = [], todoIdSequence = 0, searchWord = "" }
+    { inputTask = ""
+    , todos = []
+    , todoIdSequence = 0
+    , searchWord = ""
+    , searchStatus = Active
+    }
 
 
 init : ( Model, Cmd Msg )
@@ -62,10 +74,18 @@ view : Model -> Html Msg
 view model =
     div []
         [ div [] [ span [] [ text "検索" ], input [ type_ "text", value model.searchWord, onInput InputSearchWord ] [] ]
+        , div []
+            [ label [] [ text "Active", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == Active), onClick (ChangeSearchStatus Active) ] [] ]
+            , label [] [ text "Complete", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == Complete), onClick (ChangeSearchStatus Complete) ] [] ]
+            ]
         , input [ type_ "text", value model.inputTask, onInput UpdateTodo ] []
         , button [ onClick RegisterTodo ] [ text "追加" ]
         , ul []
-            (List.map todoView <| (List.filter (\todo -> String.contains model.searchWord todo.task) model.todos))
+            (model.todos
+                |> (List.filter (\todo -> model.searchStatus == todo.status))
+                |> (List.filter (\todo -> String.contains model.searchWord todo.task))
+                |> (List.map todoView)
+            )
         ]
 
 
@@ -122,6 +142,9 @@ update msg model =
 
         InputSearchWord searchWord ->
             ( { model | searchWord = searchWord }, Cmd.none )
+
+        ChangeSearchStatus searchStatus ->
+            ( { model | searchStatus = searchStatus }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
