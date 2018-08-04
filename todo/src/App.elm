@@ -72,15 +72,22 @@ init =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ div [] [ span [] [ text "検索" ], input [ type_ "text", value model.searchWord, onInput InputSearchWord ] [] ]
-        , div []
-            [ label [] [ text "Active", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Active)), onClick (ChangeSearchStatus (SearchStatus Active)) ] [] ]
-            , label [] [ text "Complete", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Complete)), onClick (ChangeSearchStatus (SearchStatus Complete)) ] [] ]
-            , label [] [ text "All", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == AllSearch), onClick (ChangeSearchStatus AllSearch) ] [] ]
+    div [ class "content" ]
+        [ div [ class "field" ]
+            [ label [ class "label" ] [ text "検索" ]
+            , input [ class "input", type_ "text", value model.searchWord, onInput InputSearchWord ] []
             ]
-        , input [ type_ "text", value model.inputTask, onInput UpdateTodo ] []
-        , button [ onClick RegisterTodo ] [ text "追加" ]
+        , div [ class "field" ]
+            [ label [ class "label" ] [ text "ステータス" ]
+            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Active)), onClick (ChangeSearchStatus (SearchStatus Active)) ] [], text "Active" ]
+            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Complete)), onClick (ChangeSearchStatus (SearchStatus Complete)) ] [], text "Complete" ]
+            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == AllSearch), onClick (ChangeSearchStatus AllSearch) ] [], text "All" ]
+            ]
+        , div
+            [ class "field is-grouped" ]
+            [ p [ class "control is-expanded" ] [ input [ class "input", type_ "text", value model.inputTask, onInput UpdateTodo ] [] ]
+            , button [ class "button is-primary", onClick RegisterTodo ] [ text "追加" ]
+            ]
         , ul []
             (model.todos
                 |> (List.filter
@@ -105,14 +112,14 @@ todoView todo =
         Complete ->
             li []
                 [ span [ style [ ( "text-decoration", "line-through" ) ] ] [ text todo.task ]
-                , button [ onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
+                , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
                 , input [ type_ "checkbox", checked True, onClick (ChangeStatus todo.todoId Active) ] []
                 ]
 
         Active ->
             li []
                 [ span [] [ text todo.task ]
-                , button [ onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
+                , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
                 , input [ type_ "checkbox", checked False, onClick (ChangeStatus todo.todoId Complete) ] []
                 ]
 
