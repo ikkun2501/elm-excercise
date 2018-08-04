@@ -43,7 +43,7 @@ type Msg
     | RemoveTodo TodoId
     | ChangeStatus TodoId Status
     | InputSearchWord SearchWord
-    | ChangeSearchStatus Status
+    | ChangeSearchStatus SearchStatus
 
 
 type alias Model =
@@ -51,7 +51,7 @@ type alias Model =
     , todos : List Todo
     , todoIdSequence : Int
     , searchWord : String
-    , searchStatus : Status
+    , searchStatus : SearchStatus
     }
 
 
@@ -61,7 +61,7 @@ initialModel =
     , todos = []
     , todoIdSequence = 0
     , searchWord = ""
-    , searchStatus = Active
+    , searchStatus = SearchStatus Active
     }
 
 
@@ -75,14 +75,24 @@ view model =
     div []
         [ div [] [ span [] [ text "検索" ], input [ type_ "text", value model.searchWord, onInput InputSearchWord ] [] ]
         , div []
-            [ label [] [ text "Active", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == Active), onClick (ChangeSearchStatus Active) ] [] ]
-            , label [] [ text "Complete", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == Complete), onClick (ChangeSearchStatus Complete) ] [] ]
+            [ label [] [ text "Active", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Active)), onClick (ChangeSearchStatus (SearchStatus Active)) ] [] ]
+            , label [] [ text "Complete", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Complete)), onClick (ChangeSearchStatus (SearchStatus Complete)) ] [] ]
+            , label [] [ text "All", input [ type_ "radio", name "searchStatus", checked (model.searchStatus == AllSearch), onClick (ChangeSearchStatus AllSearch) ] [] ]
             ]
         , input [ type_ "text", value model.inputTask, onInput UpdateTodo ] []
         , button [ onClick RegisterTodo ] [ text "追加" ]
         , ul []
             (model.todos
-                |> (List.filter (\todo -> model.searchStatus == todo.status))
+                |> (List.filter
+                        (\todo ->
+                            case model.searchStatus of
+                                SearchStatus status ->
+                                    status == todo.status
+
+                                AllSearch ->
+                                    True
+                        )
+                   )
                 |> (List.filter (\todo -> String.contains model.searchWord todo.task))
                 |> (List.map todoView)
             )
