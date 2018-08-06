@@ -1,0 +1,25 @@
+{
+  "name": "elmchatclient",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webpack.config.js",
+  "dependencies": {
+    "css-loader": "^0.28.11",
+    "elm-webpack-loader": "^4.5.0",
+    "file-loader": "^0.11.2",
+    "hoek": "^5.0.3",
+    "style-loader": "^0.21.0",
+    "url-loader": "^0.6.2",
+    "webpack": "^1.15.0",
+    "webpack-dev-middleware": "^1.12.2",
+    "webpack-dev-server": "^1.16.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "build": "webpack",
+    "watch": "webpack --watch",
+    "dev": "webpack-dev-server --port 3000"
+  },
+  "author": "",
+  "license": "ISC"
+}
