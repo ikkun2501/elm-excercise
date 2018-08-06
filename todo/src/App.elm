@@ -6,6 +6,8 @@ import Json.Decode exposing (string, Decoder, list)
 import Json.Decode.Pipeline exposing (required, decode)
 import Html.Events exposing (onClick, onInput)
 import Html.Attributes exposing (..)
+import Html.Lazy exposing (lazy)
+import Html.Keyed as Keyed
 
 
 type alias Task =
@@ -79,8 +81,8 @@ view model =
             ]
         , div [ class "field" ]
             [ label [ class "label" ] [ text "ステータス" ]
-            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Active)), onClick (ChangeSearchStatus (SearchStatus Active)) ] [], text "Active" ]
-            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == (SearchStatus Complete)), onClick (ChangeSearchStatus (SearchStatus Complete)) ] [], text "Complete" ]
+            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == SearchStatus Active), onClick (ChangeSearchStatus (SearchStatus Active)) ] [], text "Active" ]
+            , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == SearchStatus Complete), onClick (ChangeSearchStatus (SearchStatus Complete)) ] [], text "Complete" ]
             , label [ class "radio" ] [ input [ type_ "radio", name "searchStatus", checked (model.searchStatus == AllSearch), onClick (ChangeSearchStatus AllSearch) ] [], text "All" ]
             ]
         , div
@@ -88,22 +90,32 @@ view model =
             [ p [ class "control is-expanded" ] [ input [ class "input", type_ "text", value model.inputTask, onInput UpdateTodo ] [] ]
             , button [ class "button is-primary", onClick RegisterTodo ] [ text "追加" ]
             ]
-        , ul []
-            (model.todos
-                |> (List.filter
-                        (\todo ->
-                            case model.searchStatus of
-                                SearchStatus status ->
-                                    status == todo.status
-
-                                AllSearch ->
-                                    True
-                        )
-                   )
-                |> (List.filter (\todo -> String.contains model.searchWord todo.task))
-                |> (List.map todoView)
-            )
+        , lazy todosView model
         ]
+
+
+todosView : Model -> Html Msg
+todosView model =
+    Keyed.ul []
+        (model.todos
+            |> (List.filter
+                    (\todo ->
+                        case model.searchStatus of
+                            SearchStatus status ->
+                                status == todo.status
+
+                            AllSearch ->
+                                True
+                    )
+               )
+            |> (List.filter (\todo -> String.contains model.searchWord todo.task))
+            |> (List.map todoKeyedView)
+        )
+
+
+todoKeyedView : Todo -> ( String, Html Msg )
+todoKeyedView todo =
+    ( toString todo.todoId, todoView todo )
 
 
 todoView : Todo -> Html Msg
@@ -111,16 +123,20 @@ todoView todo =
     case todo.status of
         Complete ->
             li []
-                [ span [ style [ ( "text-decoration", "line-through" ) ] ] [ text todo.task ]
-                , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
-                , input [ type_ "checkbox", checked True, onClick (ChangeStatus todo.todoId Active) ] []
+                [ div []
+                    [ input [ class "toggle", type_ "checkbox", checked (todo.status == Complete), onClick (ChangeStatus todo.todoId Active) ] []
+                    , span [ style [ ( "text-decoration", "line-through" ) ] ] [ text todo.task ]
+                    , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
+                    ]
                 ]
 
         Active ->
             li []
-                [ span [] [ text todo.task ]
-                , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
-                , input [ type_ "checkbox", checked False, onClick (ChangeStatus todo.todoId Complete) ] []
+                [ div []
+                    [ input [ class "toggle", type_ "checkbox", checked (todo.status == Complete), onClick (ChangeStatus todo.todoId Complete) ] []
+                    , span [] [ text todo.task ]
+                    , button [ class "button", onClick (RemoveTodo todo.todoId) ] [ text "削除" ]
+                    ]
                 ]
 
 
@@ -133,11 +149,12 @@ update msg model =
         RegisterTodo ->
             ( { model
                 | todos =
-                    { todoId = model.todoIdSequence
-                    , task = model.inputTask
-                    , status = Active
-                    }
-                        :: model.todos
+                    model.todos
+                        ++ [ { todoId = model.todoIdSequence
+                             , task = model.inputTask
+                             , status = Active
+                             }
+                           ]
                 , inputTask = ""
                 , todoIdSequence = model.todoIdSequence + 1
               }
@@ -147,11 +164,11 @@ update msg model =
         RemoveTodo removeTodoId ->
             ( { model | todos = (List.filter (\todo -> todo.todoId /= removeTodoId) model.todos) }, Cmd.none )
 
-        ChangeStatus todoId status ->
+        ChangeStatus todoId s ->
             let
                 changeStatus todo =
                     if todo.todoId == todoId then
-                        { todo | status = status }
+                        { todo | status = s }
                     else
                         todo
             in
